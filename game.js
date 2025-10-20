@@ -1,4 +1,4 @@
-// গেমের কনফিগারেশন (scene-কে array করে আপডেট করা হলো)
+
 const config = {
     type: Phaser.AUTO,
     width: 800,
@@ -9,14 +9,12 @@ const config = {
             gravity: { y: 0 }
         }
     },
-    // দুটি আলাদা সিন যুক্ত করা হলো: MenuScene এবং GameScene
+
     scene: [MenuScene, GameScene] 
 };
 
 const game = new Phaser.Game(config);
 
-// --- গ্লোবাল স্টেট ভেরিয়েবলস ---
-// এই ভেরিয়েবলগুলো সমস্ত সিন-এ অ্যাক্সেস করা যাবে
 let playerMoney = 100;
 let upgradeLevel = {
     wheel: 0, 
@@ -27,23 +25,18 @@ let RICKSHAW_SPEED = 250;
 const OBSTACLE_SPEED = 200;
 let LANE_WIDTH = 100;
 
-// --- ১. গ্যারেজ শপ মেনু সিন (MenuScene) ---
+
 class MenuScene extends Phaser.Scene {
     constructor() {
         super('MenuScene');
     }
 
     preload() {
-        // মেনুর জন্য প্রয়োজনীয় অ্যাসেট লোড করা যায়
-        // আমরা গেমের অ্যাসেটগুলো GameScene-এ লোড করব
+       
     }
 
     create() {
-        // গেমপ্লে ফিজিক্স পজ করার দরকার নেই, কারণ এটি আলাদা সিন
-        
-        // --- মেনু তৈরি লজিক ---
-        
-        // ব্যাকগ্রাউন্ড ওভারলে (স্ক্রিন কালো করার জন্য)
+       
         this.add.rectangle(0, 0, config.width, config.height, 0x000000, 1).setOrigin(0).setDepth(10);
         
         this.add.text(config.width / 2, 50, 'কালু মামার গ্যারেজ (আপগ্রেড শপ)', { 
@@ -79,13 +72,13 @@ class MenuScene extends Phaser.Scene {
             currentY += 80;
         });
 
-        // --- খেলা শুরু বাটন ---
+
         this.add.text(config.width / 2, config.height - 80, 'খেলা শুরু করুন (ENTER)', { 
             fontSize: '36px', fill: '#00FFFF', backgroundColor: '#5D00FF', padding: 10
         }).setOrigin(0.5).setDepth(11);
         
         this.input.keyboard.on('keydown-ENTER', () => {
-            // GameScene শুরু করা
+           
             this.scene.start('GameScene');
         });
 
@@ -96,27 +89,25 @@ class MenuScene extends Phaser.Scene {
             playerMoney -= cost;
             upgradeLevel[key]++;
             
-            // রিকশা Speed গ্লোবাল ভেরিয়েবলে আপডেট করা
             if (key === 'wheel') {
                 RICKSHAW_SPEED = 250 + (upgradeLevel.wheel * 50); 
             }
             
             moneyTextRef.setText(`আপনার টাকা: ${playerMoney} ৳`);
             
-            // সাফল্যের বার্তা
+          
             const successMessage = this.add.text(config.width / 2, config.height / 2, 
                 `আপগ্রেড সফল!`, 
                 { fontSize: '40px', fill: '#00FF00', backgroundColor: '#000000', padding: 10 }
             ).setOrigin(0.5).setDepth(12);
 
-            // 2 সেকেন্ড পর মেনু রিলোড
+           
             this.time.delayedCall(2000, () => {
                 successMessage.destroy();
-                // বর্তমান সিনটি বন্ধ করে আবার মেনু সিন চালু করা 
                 this.scene.start('MenuScene'); 
             });
         } else {
-            // টাকা না থাকার বার্তা
+
             const failMessage = this.add.text(config.width / 2, config.height / 2, 
                 'টাকা কম আছে! আরো ভাড়া মারুন!', 
                 { fontSize: '40px', fill: '#FF0000', backgroundColor: '#000000', padding: 10 }
@@ -128,11 +119,11 @@ class MenuScene extends Phaser.Scene {
 }
 
 
-// --- ২. গেমপ্লে সিন (GameScene) ---
+
 class GameScene extends Phaser.Scene {
     constructor() {
         super('GameScene');
-        // গেমপ্লে ভেরিয়েবলস
+     
         this.isGameOver = false;
         this.isPickingUp = false;
         this.isPenaltyActive = false;
@@ -142,7 +133,7 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        // *** আইসোমেট্রিক অ্যাসেট লোডিং: নিশ্চিত করুন অ্যাসেটগুলো 'assets' ফোল্ডারে আছে! ***
+
         this.load.image('iso_road', 'assets/iso_road_tile.png'); 
         this.load.image('iso_rickshaw', 'assets/iso_rickshaw.png');
         this.load.image('iso_car', 'assets/iso_car.png'); 
@@ -153,41 +144,40 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        // --- গেমপ্লে ইনিশিয়ালাইজেশন ---
+
         this.isGameOver = false;
         this.isPickingUp = false;
         this.isPenaltyActive = false;
         this.currentLane = 0;
         this.currentFare = 0;
         
-        // ১. আইসোমেট্রিক রোড ব্যাকগ্রাউন্ড
+ 
         this.road = this.add.tileSprite(config.width / 2, config.height / 2, config.width, config.height, 'iso_road');
-        
-        // ২. রিকশাওয়ালা সেটআপ
+
         const startX = this.calculateRoadPosition(this.currentLane);
         this.rickshawala = this.physics.add.sprite(startX, config.height - 100, 'iso_rickshaw');
         this.rickshawala.setScale(0.8); 
         this.rickshawala.setCollideWorldBounds(true); 
         this.rickshawala.setDepth(1); 
 
-        // ৩. কীবোর্ড ইনপুট সেটআপ
+
         this.cursors = this.input.keyboard.createCursorKeys();
         this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
         
         this.cursors.left.on('down', () => this.changeLane(-1));
         this.cursors.right.on('down', () => this.changeLane(1));
         
-        // ৪. UI সেটআপ
+
         this.scoreText = this.add.text(10, 10, 'ভাড়া: 0 টাকা', { fontSize: '24px', fill: '#FFD700', backgroundColor: '#000000' }).setDepth(2);
         this.moneyText = this.add.text(10, 40, 'টাকা: ' + playerMoney + ' ৳', { fontSize: '20px', fill: '#00FF00', backgroundColor: '#000000' }).setDepth(2);
         this.missionText = this.add.text(config.width / 2, 10, 'মিশন: কোনো যাত্রী নেই', { fontSize: '20px', fill: '#FFFFFF', backgroundColor: '#000000' }).setOrigin(0.5).setDepth(2);
 
-        // ৫. অবজেক্ট গ্রুপ তৈরি
+
         this.obstacles = this.physics.add.group();
         this.passengers = this.physics.add.group();
         this.missionTarget = this.physics.add.group();
         
-        // ৬. অবজেক্ট স্পনিং এর জন্য টাইমার
+
         this.time.addEvent({
             delay: 1000, 
             callback: this.spawnObstacle,
@@ -202,19 +192,17 @@ class GameScene extends Phaser.Scene {
             loop: true
         });
 
-        // ৭. কোলিশন সেটআপ
         this.physics.add.collider(this.rickshawala, this.obstacles, this.hitObstacle, null, this);
         this.physics.add.overlap(this.rickshawala, this.passengers, this.pickUpPassenger, null, this);
         this.physics.add.overlap(this.rickshawala, this.missionTarget, this.dropOffPassenger, null, this); 
     }
 
-    // --- ইউটিলিটি ফাংশন (GameScene এর নিজস্ব) ---
     calculateRoadPosition(lane) {
         const center = config.width / 2;
         return center + (lane * LANE_WIDTH); 
     }
     
-    // --- গেমপ্লে লজিক ফাংশনস (GameScene এর নিজস্ব) ---
+
 
     changeLane(direction) {
         if (this.isGameOver || this.isPickingUp || this.isPenaltyActive) return;
@@ -281,7 +269,7 @@ class GameScene extends Phaser.Scene {
         this.missionText.setText('মিশন: যাত্রী খুঁজুন!');
     }
 
-    // --- মিশন হ্যান্ডলিং ফাংশনস ---
+
 
     pickUpPassenger(player, passenger) {
         if (!this.isMissionActive && !this.isPenaltyActive) {
@@ -337,7 +325,7 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    // --- বাধা হ্যান্ডলিং ফাংশনস ---
+
 
     hitObstacle(player, obstacle) {
         const obstacleType = obstacle.getData('type');
@@ -352,7 +340,7 @@ class GameScene extends Phaser.Scene {
             return;
         }
         
-        // সাধারণ ট্র্যাফিকের সাথে ধাক্কা (গেম ওভার)
+
         this.isGameOver = true;
         this.physics.pause();
         player.setTint(0xff0000); 
@@ -385,7 +373,7 @@ class GameScene extends Phaser.Scene {
             return; 
         }
         
-        // জরিমানা লজিক
+      
         const penaltyAmount = Phaser.Math.Between(30, 80);
         
         if (playerMoney >= penaltyAmount) {
@@ -440,16 +428,14 @@ class GameScene extends Phaser.Scene {
     {
         if (this.isGameOver) {
             if (Phaser.Input.Keyboard.JustDown(this.restartKey)) {
-                // গেম ওভার হলে মেনু সিন-এ ফিরে যাওয়া
+            
                 this.scene.start('MenuScene'); 
             }
             return;
         }
 
-        // ১. আইসোমেট্রিক রোডের স্ক্রলিং
         this.road.tilePositionY -= this.roadScrollSpeed; 
-        
-        // ২. মিশন টার্গেট ম্যানেজমেন্ট (স্ক্রলিং)
+
         if (this.isMissionActive) {
             this.missionTarget.getChildren().forEach(target => {
                 target.y += this.roadScrollSpeed; 
